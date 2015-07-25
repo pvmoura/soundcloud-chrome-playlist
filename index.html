@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="sdk.js"></script>
+	<script src="widget.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    ul li span, ul li img {
+      margin-right: 10px;
+    }
+    .playButtonImg {
+      right: 60px;
+      width: 40px;
+      height: 40px;
+    }
+    nextButton {
+      display: inline-block;
+    }
+    nextButton.hidden {
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <!-- <h1 id="show">Show Followings</h1> -->
+  <div id="container">
+  </div>
+  <div id="nowPlaying">
+    <span id="nowPlayingName"></span>
+  </div>
+  <div id="artist"></div>
+  <div id="track"></div>
+  <audio controls id="player" src="" ></audio>
+</body>
+  <script type="text/javascript">
+  // initialize client with app credentials
+  SC.initialize({
+    client_id: '3cfc276356e86e5aa30290c4362ed56d',
+    redirect_uri: 'http://localhost:8000/callback.html'
+  });
+
+  // global variables
+  var global_options = {
+    "oauth_token": "1-134128-151865822-72dca35449925",
+  };
+
+  var currently_playing_id, current_track_list, current_plays = 0,
+      playAllTracks = false;
+
+  // extends Array to pop and return a value by a given index
+  Array.prototype.popByIndex = function (index) {
+    var val = this[index];
+    if (typeof(val) === 'undefined' || typeof(index) !== 'number') return false;
+    
+    for (var i=index+1, len=this.length; i < len; i++) {
+      this[index] = this[i];
+      index++;
+    }
+    
+    this.pop();
+    return val;
+  }
+
+  // returns an arbitrary integer in a given interval
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  
+  function callback (options, func) {
+
+    return function () {
+      func(options);
+    }
+  }
+
+  // creates an image tag for the play button image 
+  function imageTag () {
+    var elem = document.createElement('img');
+    elem.src = "PlayButton.png";
+    elem.className = "playButtonImg";
+    return elem;
+  }
+
+  // creates span element to control radio
+  function makeRadioToggle (visibleText, id, className, func) {
+    var clickCallback = callback({id: id}, func);
+    var elem = document.createElement('span');
+    elem.innerHTML = visibleText;
+    elem.className = className;
+    elem.addEventListener("click", clickCallback, false);
+    return elem;
+  }
+
+  // display a slowly fading warning message
+  function flashWarningMessage (message) {
+    alert(message);
+  }
+
+  function updateNowPlayingBox(artistObject) {
+    var nowPlayingBox = document.getElementById("nowPlaying");
+    nowPlayingBox.innerHTML = '<span id="nowPlayingName"></span>';
+    var nowPlayingName = document.getElementById("nowPlayingName");
+    var nextButton = makeRadioToggle('Next', artistObject.id, 'nextButton', playExistingTrackList);
+    nowPlayingName.innerHTML = artistObject.username;
+    nowPlayingBox.appendChild(nextButton);
+  }
+
+  // Play a track after querying the SoundCloud API for a track list.
+  function playNewTrackList (options, artistObject) {
+    var artistId = options.id;
+    SC.get('/users/' + artistId + '/tracks', function (trackList) {
+      if (typeof(trackList) === 'undefined' || trackList.length === 0) {
+        flashWarningMessage('This artist has no tracks!');
+      } else {
+        if (typeof(artistObject) !== 'undefined')
+          updateNowPlayingBox(artistObject);
+        current_plays = 0;
+        playTrack(trackList, artistId);
+      }
+    });
+    return true;
+  }
+
+  function playExistingTrackList (options) {
+    var artistId = options.id;
+    if (typeof(current_track_list) !== 'undefined' && currently_playing_id == artistId) {
+      playTrack(current_track_list, artistId);
+    } else {
+      flashWarningMessage('Please press the play button to hear this artist');
+    }
+    return true;
+  }
+
+  function popRandomArrayEntry (arr) {
+    var index = getRandomInt(0, arr.length - 1);
+    return arr.popByIndex(index);
+  }
+
+  function getAndPlayNewArtist () {
+    if (typeof(currently_playing_id) === 'undefined') {
+      // pick a new artist from the list of followers
+    } else {
+      SC.get('/users/' + currently_playing_id + '/followings.json', function (followings) {
+        console.log(followings);
+        if (typeof(followings) === 'undefined' || followings.length == 0) {
+          // pick a new artist from the list of followers
+          return false;
+        }
+        artist = popRandomArrayEntry(followings);
+        playNewTrackList({id: artist.id}, artist);
+      });
+    }
+
+  }
+
+  function playTrack(list, id, action) {
+    console.log(current_plays);
+    if (list.length == 0) {
+      getAndPlayNewArtist();
+      return false;
+    }
+    var trackNumber, track, player = document.getElementById("player");
+    current_track_list = list;
+    currently_playing_id = id;
+
+    if (current_plays < 3 && !playAllTracks) {
+      // trackNumber = getRandomInt(0, current_track_list.length - 1);
+      // track = current_track_list.popByIndex(trackNumber);
+      track = popRandomArrayEntry(current_track_list);
+
+      if (typeof(track.stream_url) !== 'undefined') {
+        player.src = track.stream_url + "?oauth_token=" + global_options['oauth_token'];
+        document.getElementById("artist").innerHTML = track.user.username;
+        document.getElementById("track").innerHTML = track.title;
+        player.play();
+        current_plays++;
+      }
+    } else {
+      getAndPlayNewArtist();
+    }
+  }
+
+  // runs on page load -- gets a users' followers (after oauthing) and creates
+  // a list of HTML elements that provide basic functionality 
+  function onloadFollowers() {
+    SC.get('/me', global_options, function(me) {
+      
+      var id = me.id, ul = document.createElement('ul'), partial,
+      container = document.getElementById("container");
+      SC.get('/users/'+ id +'/followings.json', function (data) 
+      {
+        if (data.length > 0) {
+          for (var i=0; i < data.length; i++) {
+            partial = document.createElement('li');
+            partial.appendChild(makeRadioToggle(data[i].username, data[i].id, 'artistName', playNewTrackList));
+            // partial.appendChild(imageTag());
+            partial.appendChild(makeRadioToggle('Next', data[i].id, 'nextButton', playExistingTrackList));
+            ul.appendChild(partial);
+          }
+          container.appendChild(ul);
+        } else {
+          container.innerHTML = "No followings";
+        }
+      });
+    });
+  }
+
+    // document.getElementById('show').addEventListener("click", loadFollowing);
+  
+    window.onload = onloadFollowers;
+
+    // 
+    document.getElementById("player").addEventListener("ended", function () {
+       playExistingTrackList({id: currently_playing_id});
+    })
+  </script>
+</html>

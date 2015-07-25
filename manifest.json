@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "Soundcloud Radio",
+  "description": "Creates a trail of Soundcloud artists through their following lists",
+  "version": "1.0",
+  "browser_action": {
+    "default_popup": "index.html",
+    "default_title": "Listen"
+  },
+  "permissions": ["tabs", "http://*/*"]
+}

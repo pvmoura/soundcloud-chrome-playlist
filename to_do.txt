@@ -1,0 +1,9 @@
+TO DO
+Show number of tracks in queue
+Beautify design
+Have next button only appear when an artist starts playing
+Add Soundcloud interactions
+Show a list of previously played artists
+Show a list of followers
+Figure out how to store oauth-token in chrome memory
+Add download capabilities 
