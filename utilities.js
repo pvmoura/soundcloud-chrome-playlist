@@ -63,14 +63,28 @@ function genericCallback (options, func) {
   }
 }
 
+function replaceClick(elem, func) {
+  elem.removeEventListener('click');
+  elem.addEventListener('click', func, false);
+}
+
 // wrapper for SoundCloud API
 function makeSCFunc(method, url, callback, options) {
-  if (typeof(options) === 'undefined') var options = global_options;
+  if (typeof(options) === 'undefined')
+    var options = global_options;
   if (typeof(callback) === 'undefined') 
     var callback = function (data) { console.log(data); };
   
+  var responseCallback = function (response, error) {
+    if (!error) {
+      callback(response);
+    } else {
+      console.log('Oops. Here\'s the error: ' + error.message);
+    }
+  };
+  
   return function () {
-    SC[method](url, options, callback);
+    SC[method](url, options, responseCallback);
   };
 }
 
