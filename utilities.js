@@ -64,7 +64,7 @@ function genericCallback (options, func) {
 }
 
 function replaceClick(elem, func) {
-  elem.removeEventListener('click');
+  elem.removeEventListener('click', func);
   elem.addEventListener('click', func, false);
 }
 

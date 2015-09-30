@@ -1,0 +1,18 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+ul li span, ul li img {
+  margin-right: 10px;
+}
+
+.playButtonImg {
+  right: 60px;
+  width: 40px;
+  height: 40px;
+}
+
+#nowPlaying, #controlElement {
+  display:none;
+}

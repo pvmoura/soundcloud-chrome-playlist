@@ -3,23 +3,7 @@
 <head>
   <script type="text/javascript" src="sdk.js"></script>
   <script type="text/javascript" src="utilities.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
-    ul li span, ul li img {
-      margin-right: 10px;
-    }
-    .playButtonImg {
-      right: 60px;
-      width: 40px;
-      height: 40px;
-    }
-    #nowPlaying {
-      display:none;
-    }
-  </style>
+  <link rel="stylesheet" media="all" type="text/css" href="styles.css" />
 </head>
 <body>
   <div id="playAll">Play all of this artist? No</div>
@@ -36,6 +20,7 @@
   <audio controls id="player" src="" ></audio>
   <div id="container">
   </div>
+  <div id="controlElement"></div>
 </body>
   <script type="text/javascript" src="viewLogic.js"></script>
   <script type="text/javascript" src="main.js"></script>
