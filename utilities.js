@@ -3,7 +3,11 @@
  * Array helper functions` *
  *                         *
  ***************************/
-
+// returns an arbitrary integer in a given interval
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+  
 Array.prototype.popByIndex = function (index) {
   var val = this[index];
   if (typeof(val) === 'undefined' || typeof(index) !== 'number') return false;
@@ -18,14 +22,13 @@ Array.prototype.popByIndex = function (index) {
 }
 
 Array.prototype.popRandomIndex = function () {
-
-  // returns an arbitrary integer in a given interval
-  function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-  }
-  
   var index = getRandomInt(0, this.length - 1);
   return this.popByIndex(index);
+}
+
+NodeList.prototype.getRandomMember = function () {
+  var index = getRandomInt(0, this.length - 1);
+  return this[index];
 }
 
 // 

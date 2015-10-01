@@ -1,7 +1,6 @@
 TO DO
-Show number of tracks in queue
+Fix playCount functionality
 Beautify design
-Clean up code -- eliminate repetitive create element functions
 Show a list of previously played artists
 Figure out how to store oauth-token in chrome memory
 Add download capabilities

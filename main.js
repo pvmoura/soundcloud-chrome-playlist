@@ -1,24 +1,27 @@
  
-
+(function () {
+  window.app = {};
+  app.api_callers = {};
+  app.events = {};
+  app.data = {};
+  app.views = {};
+  app.main = {};
+})();
 // global variables
-var global_options = {
-  "oauth_token": "1-134128-151865822-72dca35449925",
-};
-
-var SCInfo = {
+app.data['SCInfo'] = {
+  oauth_token: "1-134128-151865822-72dca35449925",
   client_id: '3cfc276356e86e5aa30290c4362ed56d',
   redirect_uri: 'http://localhost:8000/callback.html'
 };
 
+app.data['playBack'] = {
+  continuousPlay: false,
+  maxPlays: 3,
+  playCount: 0,
+  followings: []
+};
 
-var currently_playing_id,
-    currently_playing_artist,
-    current_track_list,
-    current_plays = 0,
-    playAllTracks = false,
-    localPlayedArtists = [],
-    localUnplayedArtists = [],
-    max_plays = 3;
+var continuousPlay = false, maxPlays = 3, playCount, followings;
 
 function playATrack(data) {
   var tracksLeft = viewElements['tracksLeft'];
@@ -63,9 +66,8 @@ function getNewList(data) {
                   dispatchEvent('control', 'noList', getNewArtist, data);
                 } else {
                   data['list'] = trackList;
-                  // current_track_list = trackList;
-                  // currently_playing_artist = artistObj;
                   console.log('made it to newList');
+                  playCount = 0;
                   dispatchEvent('control', 'yesList', getNewTrack, data);
                   return true;
                 }
@@ -86,113 +88,18 @@ function getNewArtist(data) {
 }
 
 function decideNextArtist(data) {
-  if (continuousPlay) {
-    dispatchEvent('control', 'noArtist', getNewArtist, data);
-  } else {
-    flashWarningMessage(data);
-  }
+  // if (continuousPlay) {
+  data['artistObj'] = followings.popRandomIndex();
+  getNewArtist(data);
+  // } else {
+    // dispatchEvent;
+  // }
 }
 
-// function playTrack(list, artistObj) {
-//   console.log('inside play track');
-//   if (list.length === 0) {
-//     getAndPlayNewArtist();
-//     return false;
-//   }
-
-//   current_track_list = list;
-//   currently_playing_id = list[0].id;
-//   console.log(current_track_list);
-//   if (current_plays < max_plays ||
-//       playAllTracks && current_track_list.length > 0) {
-//     track = current_track_list.popRandomIndex();
-
-//     if (typeof(track.stream_url) !== 'undefined') {
-//       current_plays++;
-//       updateTrackInfo(track, current_track_list.length);
-//       updateNowPlaying(artistObj);
-//       updatePlayerandPlay(track);
-//     }
-//   } else {
-//     getAndPlayNewArtist();
-//   }
-// }
-
-// function playExistingTrackList() {
-//   console.log('inside play existing track');
-//   console.log(artistObj);
-//   console.log(currently_playing_id);
-//   console.log(current_track_list);
-//   if (typeof(current_track_list) !== 'undefined' && current_track_list.length > 0) {
-//     playTrack(current_track_list, artistObj);
-//   } else {
-//     flashWarningMessage('Please press the play button to hear this artist');
-//   }
-//   return true;
-// }
-
-// function playNewTrackList(artistObj) {
-//   console.log("This is art");
-//   console.log(artistObj);
-//   makeSCFunc('get',
-//               '/users/' + artistObj.id + '/tracks/',
-//               function (trackList) {
-//                 if (typeof(trackList) === 'undefined' || trackList.length === 0) {
-//                   flashWarningMessage("This artist has no tracks!");
-//                   getAndPlayNewArtist();
-//                 } else {
-//                   localPlayedArtists.push(artistObj);
-//                   popFrom = localUnplayedArtists.indexOfByKeyVal("id", artistObj.id);
-//                   console.log(popFrom);
-//                   localUnplayedArtists.popByIndex(popFrom);
-//                   current_plays = 0;
-//                   playTrack(trackList, artistObj);
-//                 }
-//               })();
-// }
-
-// function getAndPlayNewArtist (forceId) {
-//   var artist;
-//   if (forceId) currently_playing_id = forceId;
-//   if (!currently_playing_id) {
-//     artist = localUnplayedArtists.popRandomIndex();
-//     playNewTrackList(artist);
-//   } else {
-//     makeSCFunc('get', '/users/' + currently_playing_id + '/followings.json',
-//                 function (followings) {
-//                   artist = followings && followings.length > 0 ?
-//                            followings.popRandomIndex()      :
-//                            localUnplayedArtists.popRandomIndex();
-//                   console.log(artist);
-//                   playNewTrackList(artist);
-//                 })();
-//   }
-
-// }
-
-// function onloadFollowers() {
-//   makeSCFunc('get', '/me', function(me) {
-//     var ul = makeHTMLTag('ul'), partial, container = getById('container');
-//     SC.get('/users/' + me.id + '/followings.json', function (data) {
-//       if (data.length > 0) {
-//         localUnplayedArtists = data;
-//         console.log(localUnplayedArtists);
-//         data.reduce(function (prev, curr, i, arr) {
-//           partial = makeHTMLTag('li');
-//           partial.appendChild(makeHTMLTag('span', {
-//             'innerHTML': curr.username,
-//             'className': 'artistName',
-//             'event': { 'name': 'click', 'func': genericCallback(curr, playNewTrackList) }
-//           }));
-//           ul.appendChild(partial);
-//         });
-//         container.appendChild(ul);
-//       } else {
-//         container.innerHTML = "No Followings";
-//       }
-//     });
-//   })();
-// }
+function pickRandomFollowing() {
+  var followings = getById("container").firstElementChild.childNodes;
+  return followings.getRandomMember();
+}
 
 // initialize client with app credentials
 SC.initialize(SCInfo);
@@ -214,6 +121,7 @@ function onloadFollowers() {
           }));
           ul.appendChild(li);
         });
+        followings = data;
         container.appendChild(ul);
         initialize();
       } else {

@@ -7,5 +7,5 @@
     "default_popup": "index.html",
     "default_title": "Listen"
   },
-  "permissions": ["tabs", "http://*/*"]
+  "permissions": ["tabs", "http://*/*", "storage"]
 }

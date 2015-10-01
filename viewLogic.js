@@ -7,7 +7,8 @@ var viewElements = {
   'trackElem': getById("track"),
   'tracksLeft': getById("tracksLeft"),
   'player': getById("player"),
-  'control': getById("controlElement")
+  'control': getById("controlElement"),
+  'playCount': getById("numberofPlays")
 };
 
 var events = {
@@ -22,7 +23,14 @@ var events = {
 };
 
 function dispatchEvent(elemName, eventName, callback, data) {
-  var evt = new CustomEvent(eventName, {'detail': function () { console.log("HELLO"); callback(data); }});
+  var evt = new CustomEvent(
+              eventName,
+              { 'detail': function () {
+                  console.log(eventName);
+                  callback(data);
+                }
+              }
+            );
   viewElements[elemName].dispatchEvent(evt);
 }
 
@@ -30,7 +38,6 @@ function initialize() {
   for (var eventName in events) {
     if (events.hasOwnProperty(eventName)) {
       viewElements['control'].addEventListener(eventName, function (evt) {
-        console.log(evt);
         if (evt.detail) {
           evt.detail();
         }
@@ -43,17 +50,21 @@ function updateView(data) {
   var track = data['track'],
       list = data['list'],
       artist = data['artistObj'];
-      tracksLeft = parseInt(viewElements['tracksLeft'].innerHTML, 10);
-  if (!tracksLeft) tracksLeft = list.length + 1;
-  console.log(tracksLeft);
-  console.log(list);
-  if (tracksLeft > 0) {
+      // tracksLeft = parseInt(viewElements['tracksLeft'], 10),
+      // playCount = tracksLeft ? tracksLeft : parseInt(viewElements['playCount'].value, 10);
+  if (continuousPlay || list.length < maxPlays)
+    maxPlays = list.length + 1;
+  else
+    maxPlays = parseInt(viewElements['playCount'].value, 10);
+
+  if (maxPlays - playCount > 0) {
     updateTrackInfo(track);
     updatePlayerandPlay(track);
     updateNowPlaying(data);
-    viewElements['tracksLeft'].innerHTML = tracksLeft - 1;
+    playCount++;
+    viewElements['tracksLeft'].innerHTML = maxPlays - playCount;
   } else {
-    dispatchEvent('control', 'noArtist', decideNextArtist, data);
+    decideNextArtist(data);
   }
 }
 
@@ -85,25 +96,25 @@ function updateNowPlaying(data) {
 
   nowPlaying.style.display = "block";
   for (var i=0; i < children.length; i++) {
-    console.log(children[i]);
     children[i].remove();
   }
-  nowPlayingName.innerHTML = artistObj.username;
+  // nowPlayingName.innerHTML = artistObj.username;
+  nowPlaying.innerHTML = artistObj.username;
   
   nowPlaying.appendChild(makeHTMLTag('span', {
     'event': {
       'name': 'click',
-      'func': dispatchEvent('control', 'noTrack', getNewTrack, data)
+      'func': function () { dispatchEvent('control', 'noTrack', getNewTrack, data); }
     },
     'className': 'nextButton',
-    'innnerHTML': 'Next'
+    'innerHTML': 'Next'
   }));
 
   nowPlaying.appendChild(makeHTMLTag('span', {
     'innerHTML': 'Follow',
     'event': {
       'name': 'click',
-      'func': makeSCFunc('put', '/me/followings/' + currently_playing_id)
+      'func': makeSCFunc('put', '/me/followings/' + data['track'].id)
     }
   }));
   // replaceClick(nextButton, function () { dispatchEvent('control', 'noTrack', getNewTrack, data); });
