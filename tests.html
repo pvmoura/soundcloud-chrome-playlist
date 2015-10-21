@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>SC Playlist Tests</title>
+	<link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.19.0.css">
+</head>
+<body>
+	<div id="qunit"></div>
+	<div id="qunit-fixture">
+		<div id="control"></div>
+		<div id="track"></div>
+	  <div id="nowPlaying">
+	    <span id="nowPlayingName"></span>
+	    <span id="nextButton">Next</span>
+	    <span id="followButton">Follow</span>
+	  </div>
+		<div id="track">
+	    <div id="trackElem">
+	      <span id="trackInfo">Like Song</span>
+	    </div>
+	  </div>
+	  <audio controls id="player" src="" ></audio>
+	  <div id="tracksLeft">3</div>
+	  <input id="maxPlays" value="3" type="text" />
+	  <input type="checkbox" id="playAll" />
+	</div>
+	<script src="//code.jquery.com/qunit/qunit-1.19.0.js"></script>
+	<script src="sdk.js"></script>
+	<script type="text/javascript" src="utilities.js"></script>
+	<script type="text/javascript" src="controllers.js"></script>
+	<script type="text/javascript" src="viewLogic.js"></script>
+	<script type="text/javascript">
+		var SCOptions = { oauth_token: "1-134128-151865822-72dca35449925" };
+		var testData = {
+			notracks: { artistObj: {id: 2606755}, SCInfo: SCOptions },
+			badTrackList: { artistObj: {id: 2606755}, list: ['asdf'], SCInfo: SCOptions },
+			oneFollowing: { artistObj: {id: 2606755}, following: 2031627, SCInfo: SCOptions },
+			oneTrack: { artistObj: {id: 44958345}, trackId: 92514754, SCInfo: SCOptions },
+			nofollowings: { artistObj: {id: 2031627}, SCInfo: SCOptions },
+			dummyTrack: { artistObj: { id: 2031627 }, list: [ {stream_url: 'asdf'} ], SCInfo: SCOptions },
+			trackNoStreamURL: { artistObj: { id: 2031627 }, list: [ {some_key: 'asfd'} ], SCInfo: SCOptions },
+		};
+
+		QUnit.module("utility functions");
+		QUnit.test("test popbyindex", function(assert) {
+			var testArr = [1,2,3];
+			assert.ok(testArr.popByIndex, "arrays have a popByIndex method");
+			assert.equal(testArr.popByIndex(1), 2, "it pops the right index");
+			assert.equal(testArr.popByIndex(8), false, "false on junk input");
+		});
+		
+		QUnit.test("getById", function(assert) {
+			var qunit = document.getElementById("qunit");
+			assert.equal(qunit, getById("qunit"), "getById works correctly");
+		});
+		QUnit.test("make HTML Tag test", function(assert) {
+			var options = { className: 'hello', event: { name: 'click', func: function () { clickCheck = true; } } },
+					elem = makeHTMLTag('span', options), clickCheck = false;
+
+			assert.equal(elem.tagName, "SPAN", "it created a span");
+			assert.equal(elem.className, "hello", "it added a class, hello");
+
+			elem.dispatchEvent(new Event('click'));
+			assert.ok(clickCheck, "the click event was added");
+		});
+		QUnit.test("test that it makes an SC API function", function(assert) {
+			var hitApi = false,
+					done = assert.async(),
+					callback = function (response) { 
+						hitApi = true;
+						assert.ok(hitApi, "it hit the api");
+						done();
+					},
+					SCFunc = makeSCFunc('get', '/me', SCOptions, callback);
+
+			assert.equal(typeof SCFunc, "function", "it returns a function");
+
+			SCFunc();
+		});
+
+		QUnit.module("Controllers");
+		QUnit.test("getNewArtist has following test", function(assert) {
+			assert.expect(2);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener('yesfollowing', function(evt) {
+					var data = evt.detail.data;
+					assert.ok(true, "it triggered the event");
+					assert.equal(data.artistObj.id, testData['oneFollowing'].following, "it found the right artist");
+					done();
+				}, false);
+			getNewFollowing(testData['oneFollowing'])();
+		});
+		QUnit.test("getNewArtist has no following test", function(assert) {
+			assert.expect(2);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("nofollowing", function(evt) {
+				var data = evt.detail.data;
+				assert.ok(true, "it triggered the event");
+				assert.deepEqual(data, testData['nofollowings'], "returns an empty object");
+				done();
+			}, false);
+
+			getNewFollowing(testData['nofollowings'])();
+		});
+		QUnit.test("getNewList has list test", function(assert) {
+			assert.expect(3);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("yeslist", function(evt) {
+				var data = evt.detail.data;
+				assert.equal("yeslist", evt.type, "the right event fired");
+				assert.ok(data['list'], "there's a list object in the data");
+				assert.equal(data['list'][0].id, data.trackId, "it found the right list");
+				done();
+			}, false);
+
+			getNewList(testData['oneTrack'])();
+		});
+		QUnit.test("getNewList has no list test", function(assert) {
+			assert.expect(2);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("nolist", function(evt) {
+				var data = evt.detail.data;
+				console.log(data);
+				assert.equal(evt.type, "nolist", "the right event fired");
+				assert.equal(data['list'].length, 0, "there's an empty track list");
+				done();
+			}, false);
+
+			getNewList(testData['notracks'])();
+		});
+		QUnit.test("getNewTrack has no tracks test", function(assert) {
+			assert.expect(2);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("notrack", function(evt) {
+				var data = evt.detail.data;
+				assert.equal("notrack", evt.type, "the right event fired");
+				assert.deepEqual(data, testData['badTrackList'], "it has no tracks");
+				done();
+			}, false);
+
+			getNewTrack(testData['badTrackList']);
+		});
+		QUnit.test("getNewTrack has a track", function(assert) {
+			assert.expect(3);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("yestrack", function(evt) {
+				var data = evt.detail.data;
+				assert.equal("yestrack", evt.type, "the right event fired");
+				assert.ok(data.track, "it has a track object on the data");
+				assert.equal("asdf", data.track.stream_url, "it found a track with a stream_url");
+				done();
+			}, false);
+
+			getNewTrack(testData['dummyTrack']);
+		});
+		QUnit.test("getNewTrack track has no stream url", function(assert) {
+			assert.expect(2);
+			var done = assert.async(),
+			control = document.getElementById("control");
+			control.addEventListener("notrack", function(evt) {
+				var data = evt.detail.data;
+				assert.equal("notrack", evt.type, "the right event fired");
+				assert.equal(data.track, false, "it didn't find a track");
+				done();
+			}, false);
+			
+			getNewTrack(testData['trackNoStreamURL']);
+		});
+		QUnit.test("getNewArtist test", function(assert){
+			assert.expect(2);
+			var done = assert.async(), control = getById("control"),
+					artist = { artistObj: { asdf: 1, jkl: 2 } },
+					dummyData = { followings: [ artist ] };
+			control.addEventListener("nolist", function(evt) {
+				var data = evt.detail.data;
+				assert.equal(evt.type, "nolist", "the right event fired");
+				assert.deepEqual(data.artistObj, artist, "it found the right object");
+				done();
+			});
+
+			getNewArtist(dummyData);
+		});
+
+		QUnit.module("viewLogic");
+		QUnit.test("updateTrackInfo correctly updates track element", function(assert) {
+			var dummyTrack = { title: "test" }, done = assert.async(),
+					clickCheck = function () { assert.ok(true, "click registered"); done(); },
+					trackInfo, text, span;
+			
+			updateTrackInfo(dummyTrack, dummyTrack, clickCheck);
+			trackInfo = getById("trackElem");
+			text = trackInfo.childNodes[0].textContent;
+			span = trackInfo.childNodes[1];
+			assert.ok(trackInfo, "it created the element");
+			assert.equal(text, dummyTrack.title, "it added the title correctly");
+			span.dispatchEvent(new Event("click"));
+		});
+		QUnit.test("updateNowPlaying correctly updates now playing element", function(assert) {
+			var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf' } },
+					done = assert.async();
+			
+			getById('control').addEventListener("notrack", function (evt) {
+				assert.ok(true, "the notrack event fired");
+				assert.deepEqual(evt.detail.data, dummyData, "the event has the passed in data");
+				done();
+			}, false);
+
+			updateNowPlaying(dummyData);
+
+			assert.equal(getById("nowPlayingName").textContent,
+								   dummyData.artistObj.username,
+								   "it added the name");
+			assert.equal(getById('nowPlaying').style.display, "block", "it changed the style to block");
+			getById('nextButton').click();
+		});
+		QUnit.test("updateNowPlaying correctly replaces the click event", function(assert) {
+			var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf' } },
+					dummyData2 = { artistObj: { username: "mannequin2" }, track: { id: 'asdf2' } },
+					done = assert.async();
+
+			//check that the click event only fires once
+			assert.expect(3);
+
+			getById('control').addEventListener("notrack", function (evt) {
+				assert.ok(true, "the notrack event fired");
+				assert.deepEqual(evt.detail.data, dummyData2, "the event only has the updated data");
+				done();
+			}, false);
+			
+			updateNowPlaying(dummyData);
+			updateNowPlaying(dummyData2);
+			assert.equal(getById('nowPlayingName').textContent,
+									 dummyData2.artistObj.username,
+									 "it added the latest name");
+			getById('nextButton').click();
+		});
+		QUnit.test("updatePlayerandPlay correctly plays", function (assert) {
+			var player = getById("player"), done = assert.async(),
+					dummyData = { stream_url: 'https://api.soundcloud.com/tracks/218973874/stream' },
+					dummyToken = '1-134128-151865822-72dca35449925',
+					testUrl = dummyData.stream_url + '?oauth_token=' + dummyToken;
+			
+			player.addEventListener("playing", function (evt) {
+				assert.ok(true, "it started playing");
+				assert.equal(this.src, testUrl, "it has the right URL");
+				this.pause();
+				done();
+			});
+
+			updatePlayerandPlay(dummyData, dummyToken);
+		});
+
+		QUnit.test("getNewPlayCount works correctly", function(assert) {
+			var dummyData = { list: [1,2,3,4] }, playAll = getById("playAll"),
+					oldPlayCount = getById("tracksLeft"), playCount,
+					maxPlays = getById("maxPlays");
+
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, 2, "when listLen is greater than maxPlays, it decrements the old play count");
+
+			dummyData.list = [1,2];
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, 2, "when listLen is less than maxPlays, playCount is listLen");
+			playAll.checked = true;
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, dummyData.list.length, "unless playAll is checked");
+
+			dummyData.list = [1,2,3,4,5,6];
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, dummyData.list.length, "when playAll is checked, it is equal to the list length");
+
+			playAll.checked = false;
+			oldPlayCount.innerHTML = 0;
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, false, "when oldPlayCount is 0, it returns false");
+
+			oldPlayCount.innerHTML = 7;
+			playCount = getNewPlayCount(dummyData);
+			assert.equal(playCount, 3, "when oldPlayCount is greater than maxPlays, it sets playCount to maxPlays");
+
+			maxPlays.value = 'asdf';
+			playCount = getNewPlayCount(dummyData);
+			assert.ok(isNaN(playCount), "when maxPlays is NaN, it returns NaN");
+
+		});
+	</script>
+</body>
+</html>
