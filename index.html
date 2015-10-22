@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script type="text/javascript" src="sdk.js"></script>
-  <script type="text/javascript" src="utilities.js"></script>
-  <link rel="stylesheet" media="all" type="text/css" href="styles.css" />
+  <link rel="stylesheet" media="all" type="text/css" href="styles/styles.css" />
 </head>
 <body>
-  <div id="playAll">Play all of this artist? No</div>
-  <input type="text" value="3" id="numberofPlays" />
-  <div id="nextArtist">New Artist</div>
+  <input type="checkbox" id="playAll" />
+  <input type="text" value="3" id="maxPlays" />
+<!--   <div id="nextArtist">New Artist</div> -->
   <div id="nowPlaying">
     <span id="nowPlayingName"></span>
     <span id="nextButton">Next</span>
     <span id="followButton">Follow</span>
   </div>
-  <div id="tracksLeft"></div>
-  <!-- <div id="artist"></div> -->
-  <div id="track"></div>
+  <div id="tracksLeft">3</div>
+  <div id="track">
+    <div id="trackElem">
+      <span id="trackInfo">Like Song</span>
+    </div>
+  </div>
   <audio controls id="player" src="" ></audio>
   <div id="container">
   </div>
-  <div id="controlElement"></div>
+  <div id="control"></div>
 </body>
-  <script type="text/javascript" src="viewLogic.js"></script>
-  <script type="text/javascript" src="main.js"></script>
+  <script type="text/javascript" src="javascripts/namespace.js"></script>
+  <script type="text/javascript" src="javascripts/viewLogic.js"></script>
+  <script type="text/javascript" src="javascripts/controllers.js"></script>
+  <script type="text/javascript" src="javascripts/main.js"></script>
   
 </html>

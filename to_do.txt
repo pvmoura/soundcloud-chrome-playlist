@@ -1,5 +1,4 @@
 TO DO
-Fix playCount functionality
 Beautify design
 Show a list of previously played artists
 Figure out how to store oauth-token in chrome memory
