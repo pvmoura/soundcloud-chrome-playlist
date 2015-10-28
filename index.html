@@ -4,26 +4,37 @@
   <link rel="stylesheet" media="all" type="text/css" href="styles/styles.css" />
 </head>
 <body>
-  <input type="checkbox" id="playAll" />
-  <input type="text" value="3" id="maxPlays" />
 <!--   <div id="nextArtist">New Artist</div> -->
-  <div id="nowPlaying">
-    <span id="nowPlayingName"></span>
-    <span id="nextButton">Next</span>
-    <span id="followButton">Follow</span>
-  </div>
-  <div id="tracksLeft">3</div>
-  <div id="track">
+  <div id="appContainer">
+    <!-- <div id="tracksLeft">3</div> -->
+
     <div id="trackElem">
-      <span id="trackInfo">Like Song</span>
+      <span id="trackText"></span>
+      <img src="images/follow.png" id="followButton" title="Follow artist!" />
+      <!-- <span id="nowPlayingName">Test</span> -->
+      <img src="images/next.png" id="nextButton" title="Next track" />
+      <div id="trackInfoContainer">
+        <span id="trackInfo" title="Like track!"></span>
+      </div>
     </div>
+    <audio controls id="player" src="" ></audio>
+    <div id="dropDownsContainer">
+      <div id="settingsContainer">
+        <input type="checkbox" id="playAll" title="Play All?" />
+        <input type="text" id="maxPlays" value="3" title="Max plays" />
+      </div>
+      <div id="followingsContainer">
+      </div>
+    </div>
+
+    <div id="breadcrumbs"></div>
   </div>
-  <audio controls id="player" src="" ></audio>
-  <div id="container">
-  </div>
+  
   <div id="control"></div>
 </body>
+  <script type="text/javascript" src="javascripts/vendors/sdk.js"></script>
   <script type="text/javascript" src="javascripts/namespace.js"></script>
+  <script type="text/javascript" src="javascripts/utilities.js"></script>
   <script type="text/javascript" src="javascripts/viewLogic.js"></script>
   <script type="text/javascript" src="javascripts/controllers.js"></script>
   <script type="text/javascript" src="javascripts/main.js"></script>

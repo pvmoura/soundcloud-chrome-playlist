@@ -114,7 +114,8 @@ Array.prototype.indexOfByKeyVal = function (key, val, index) {
 
     ,dispatchEvent: function(elemId, eventName, data, callback) {
       console.log('in dispatch', data, eventName);
-      var evt = new CustomEvent( eventName, { 'detail': { data: data } } ),
+      var evt = new CustomEvent( eventName, {
+        'detail': { data: data, callback: callback } } ),
           elem = document.getElementById(elemId);
       elem.dispatchEvent(evt);
     }

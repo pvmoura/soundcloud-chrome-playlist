@@ -6,8 +6,9 @@
     return;
   }
 
-  var dispatchEvent = this.utils.dispatchEvent,
-      makeSCFunc    = this.utils.makeSCFunc;
+  var dispatchEvent       = this.utils.dispatchEvent,
+      makeSCFunc          = this.utils.makeSCFunc,
+      updateAllFollowings = this.viewLogic.updateAllFollowings;
 
   this.controllers = {
     getNewTrack: function(data) {
@@ -52,9 +53,21 @@
       if (artist) {
         event = 'yesfollowing';
         data['artistObj'] = artist;
+        data['playCount'] = 0;
       }
 
       dispatchEvent('control', event, data);
+    }
+
+    ,getMyFollowings: function (data) {
+      makeSCFunc('get', '/me', data.SCInfo, function(me) {
+        var callback = function (trackList) {
+          data['list'] = trackList;
+          updateAllFollowings(data);
+        };
+        data.artistObj = me;
+        dispatchEvent('control', 'nolist', data, callback);
+      })();
     }
   }
 }).apply(soundCloudApp);
