@@ -14,5 +14,114 @@ ul li span, ul li img {
 }
 
 #nowPlaying, #controlElement {
-  display:none;
+  /*display:none;*/
+}
+
+#trackText {
+  display:inline-block;
+  height: 18px;
+  position: absolute;
+  width: 245px;
+  overflow: hidden;
+  left: 20px;
+}
+
+#nextButton {
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  right: 18px;
+  cursor: pointer;
+}
+
+#trackInfoContainer {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+
+ #trackInfo {
+  cursor: pointer;
+  position: relative;
+  width: 15px;
+  height: 13.5px;
+  top: 4px;
+}
+
+#trackElem {
+  padding-top:5px;
+  width: 300px;
+  position: relative;
+  padding-left: 2px;
+}
+
+#followButton {
+  left: 2px;
+  width: 15px;
+  height: 15px;
+}
+
+ #trackInfo:before, #trackInfo:after { 
+  position: absolute;
+  content: "";
+  left: 7.5px;
+  top: 0;
+  width: 7.5px;
+  height: 12px;
+  background: red;
+  -moz-border-radius: 7.5px 7.5px 0 0;
+  border-radius: 7.5px 7.5px 0 0;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  -webkit-transform-origin: 0 100%;
+  -moz-transform-origin: 0 100%;
+  -ms-transform-origin: 0 100%;
+  -o-transform-origin: 0 100%;
+  transform-origin: 0 100%;
+}
+
+#trackInfo:after {
+  left: 0;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  transform: rotate(45deg);
+  -webkit-transform-origin: 100% 100%;
+  -moz-transform-origin: 100% 100%;
+  -ms-transform-origin: 100% 100%;
+  -o-transform-origin: 100% 100%;
+  transform-origin :100% 100%;
+}
+
+#dropDownsContainer {
+  position: relative;
+  width: 300px;
+  padding-top: 5px;
+}
+
+#settingsContainer {
+  width: 45px;
+  right: 0px;
+  position: absolute;
+}
+
+#maxPlays {
+  width: 20px;
+}
+
+#followingsContainer {
+  width: 245px;
+}
+
+#followingsContainer ul {
+  width: 100%;
+}
+
+#followingsContainer ul li {
+  width: 100%;
+  overflow: hidden;
 }
