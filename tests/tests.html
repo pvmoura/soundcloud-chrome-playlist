@@ -8,39 +8,71 @@
 <body>
 	<div id="qunit"></div>
 	<div id="qunit-fixture">
-		<div id="control"></div>
-		<div id="track"></div>
-	  <div id="nowPlaying">
-	    <span id="nowPlayingName"></span>
-	    <span id="nextButton">Next</span>
-	    <span id="followButton">Follow</span>
-	  </div>
-		<div id="track">
+	<!--   <div id="nextArtist">New Artist</div> -->
+	  <div id="appContainer">
+	    <!-- <div id="tracksLeft">3</div> -->
+
 	    <div id="trackElem">
-	      <span id="trackInfo">Like Song</span>
+	      <span id="trackText"></span>
+	      <img src="/images/follow.png" id="followButton" title="Follow artist!" />
+	      <!-- <span id="nowPlayingName">Test</span> -->
+	      <img src="/images/next.png" id="nextButton" title="Next track" />
+	      <div id="trackInfoContainer">
+	        <span id="trackInfo" title="Like track!"></span>
+	      </div>
 	    </div>
+	    <audio controls id="player" src="" ></audio>
+	    <div id="dropDownsContainer">
+	      <div id="settingsContainer">
+	        <input type="checkbox" id="playAll" title="Play All?" />
+	        <input type="text" id="maxPlays" value="3" title="Max plays" />
+	      </div>
+	      <div id="followingsContainer">
+	      </div>
+	    </div>
+
+	    <div id="breadcrumbs"></div>
 	  </div>
-	  <audio controls id="player" src="" ></audio>
-	  <div id="tracksLeft">3</div>
-	  <input id="maxPlays" value="3" type="text" />
-	  <input type="checkbox" id="playAll" />
+	  
+	  <div id="control"></div>
 	</div>
 	<script src="//code.jquery.com/qunit/qunit-1.19.0.js"></script>
-	<script src="sdk.js"></script>
-	<script type="text/javascript" src="utilities.js"></script>
-	<script type="text/javascript" src="controllers.js"></script>
-	<script type="text/javascript" src="viewLogic.js"></script>
+	<script src="/javascripts/vendors/sdk.js"></script>
+	<script type="text/javascript" src="/javascripts/namespace.js"></script>
+	<script type="text/javascript" src="/javascripts/utilities.js"></script>
+	<script type="text/javascript" src="/javascripts/viewLogic.js"></script>
+	<script type="text/javascript" src="/javascripts/controllers.js"></script>
 	<script type="text/javascript">
+	;(function() {
 		var SCOptions = { oauth_token: "1-134128-151865822-72dca35449925" };
 		var testData = {
 			notracks: { artistObj: {id: 2606755}, SCInfo: SCOptions },
 			badTrackList: { artistObj: {id: 2606755}, list: ['asdf'], SCInfo: SCOptions },
 			oneFollowing: { artistObj: {id: 2606755}, following: 2031627, SCInfo: SCOptions },
-			oneTrack: { artistObj: {id: 44958345}, trackId: 92514754, SCInfo: SCOptions },
+			oneTrack: { artistObj: { username: 'testUser', id: 44958345}, trackId: 92514754, track: { user: { id: 44958345 } }, SCInfo: SCOptions },
 			nofollowings: { artistObj: {id: 2031627}, SCInfo: SCOptions },
 			dummyTrack: { artistObj: { id: 2031627 }, list: [ {stream_url: 'asdf'} ], SCInfo: SCOptions },
 			trackNoStreamURL: { artistObj: { id: 2031627 }, list: [ {some_key: 'asfd'} ], SCInfo: SCOptions },
 		};
+
+		//namespacing			
+	  var SC                  = window.SC,
+	      makeSCFunc          = this.utils.makeSCFunc,
+	      dispatchEvent       = this.utils.dispatchEvent,
+	      flashWarningMessage = this.utils.flashWarningMessage,
+	      makeHTMLTag         = this.utils.makeHTMLTag,
+	      getById             = this.utils.getById,
+	      initializeEvents    = this.viewLogic.initializeEvents,
+	      updateTracksLeft    = this.viewLogic.updateTracksLeft,
+	      updatePlayerandPlay = this.viewLogic.updatePlayerandPlay,
+	      updateTrackInfo     = this.viewLogic.updateTrackInfo,
+	      updateNowPlaying    = this.viewLogic.updateNowPlaying,
+	      getNewPlayCount     = this.viewLogic.getNewPlayCount,
+	      getNewList          = this.controllers.getNewList,
+	      getNewArtist        = this.controllers.getNewArtist,
+	      getNewTrack         = this.controllers.getNewTrack,
+	      getNewFollowing     = this.controllers.getNewFollowing,
+	      getMyFollowings     = this.controllers.getMyFollowings;
 
 		QUnit.module("utility functions");
 		QUnit.test("test popbyindex", function(assert) {
@@ -191,55 +223,55 @@
 		QUnit.test("updateTrackInfo correctly updates track element", function(assert) {
 			var dummyTrack = { title: "test" }, done = assert.async(),
 					clickCheck = function () { assert.ok(true, "click registered"); done(); },
-					trackInfo, text, span;
+					trackElem, text, span, trackInfo;
 			
-			updateTrackInfo(dummyTrack, dummyTrack, clickCheck);
-			trackInfo = getById("trackElem");
-			text = trackInfo.childNodes[0].textContent;
-			span = trackInfo.childNodes[1];
+			updateTrackInfo(testData['oneTrack'], dummyTrack, clickCheck);
+			trackElem = getById("trackElem");
+			trackInfo = getById("trackInfo");
+			trackText = getById("trackText");
 			assert.ok(trackInfo, "it created the element");
-			assert.equal(text, dummyTrack.title, "it added the title correctly");
-			span.dispatchEvent(new Event("click"));
+			assert.equal(trackText.textContent, testData['oneTrack'].artistObj.username + " - " + dummyTrack.title, "it added the title correctly");
+			trackInfo.click();
 		});
-		QUnit.test("updateNowPlaying correctly updates now playing element", function(assert) {
-			var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf', user: { id: 1234 } } },
-					done = assert.async();
+		// QUnit.test("updateNowPlaying correctly updates now playing element", function(assert) {
+		// 	var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf', user: { id: 1234 } } },
+		// 			done = assert.async();
 			
-			getById('control').addEventListener("notrack", function (evt) {
-				assert.ok(true, "the notrack event fired");
-				assert.deepEqual(evt.detail.data, dummyData, "the event has the passed in data");
-				done();
-			}, false);
+		// 	getById('control').addEventListener("notrack", function (evt) {
+		// 		assert.ok(true, "the notrack event fired");
+		// 		assert.deepEqual(evt.detail.data, dummyData, "the event has the passed in data");
+		// 		done();
+		// 	}, false);
 
-			updateNowPlaying(dummyData);
+		// 	updateNowPlaying(dummyData);
 
-			assert.equal(getById("nowPlayingName").textContent,
-								   dummyData.artistObj.username,
-								   "it added the name");
-			assert.equal(getById('nowPlaying').style.display, "block", "it changed the style to block");
-			getById('nextButton').click();
-		});
-		QUnit.test("updateNowPlaying correctly replaces the click event", function(assert) {
-			var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf', user: { id: 1234 } } },
-					dummyData2 = { artistObj: { username: "mannequin2" }, track: { id: 'asdf2', user: { id: 1234 } } },
-					done = assert.async();
+		// 	assert.equal(getById("nowPlayingName").textContent,
+		// 						   dummyData.artistObj.username,
+		// 						   "it added the name");
+		// 	assert.equal(getById('nowPlaying').style.display, "block", "it changed the style to block");
+		// 	getById('nextButton').click();
+		// });
+		// QUnit.test("updateNowPlaying correctly replaces the click event", function(assert) {
+		// 	var dummyData = { artistObj: { username: "mannequin" }, track: { id: 'asdf', user: { id: 1234 } } },
+		// 			dummyData2 = { artistObj: { username: "mannequin2" }, track: { id: 'asdf2', user: { id: 1234 } } },
+		// 			done = assert.async();
 
-			//check that the click event only fires once
-			assert.expect(3);
+		// 	//check that the click event only fires once
+		// 	assert.expect(3);
 
-			getById('control').addEventListener("notrack", function (evt) {
-				assert.ok(true, "the notrack event fired");
-				assert.deepEqual(evt.detail.data, dummyData2, "the event only has the updated data");
-				done();
-			}, false);
+		// 	getById('control').addEventListener("notrack", function (evt) {
+		// 		assert.ok(true, "the notrack event fired");
+		// 		assert.deepEqual(evt.detail.data, dummyData2, "the event only has the updated data");
+		// 		done();
+		// 	}, false);
 			
-			updateNowPlaying(dummyData);
-			updateNowPlaying(dummyData2);
-			assert.equal(getById('nowPlayingName').textContent,
-									 dummyData2.artistObj.username,
-									 "it added the latest name");
-			getById('nextButton').click();
-		});
+		// 	updateNowPlaying(dummyData);
+		// 	updateNowPlaying(dummyData2);
+		// 	assert.equal(getById('nowPlayingName').textContent,
+		// 							 dummyData2.artistObj.username,
+		// 							 "it added the latest name");
+		// 	getById('nextButton').click();
+		// });
 		QUnit.test("updatePlayerandPlay correctly plays", function (assert) {
 			var player = getById("player"), done = assert.async(),
 					dummyData = { track: { stream_url: 'https://api.soundcloud.com/tracks/218973874/stream' } },
@@ -256,39 +288,40 @@
 			updatePlayerandPlay(dummyData, dummyToken);
 		});
 
-		QUnit.test("getNewPlayCount works correctly", function(assert) {
-			var dummyData = { list: [1,2,3,4] }, playAll = getById("playAll"),
-					oldPlayCount = getById("tracksLeft"), playCount,
-					maxPlays = getById("maxPlays");
+		// QUnit.test("getNewPlayCount works correctly", function(assert) {
+		// 	var dummyData = { list: [1,2,3,4] }, playAll = getById("playAll"),
+		// 			oldPlayCount = getById("tracksLeft"), playCount,
+		// 			maxPlays = getById("maxPlays");
 
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, 2, "when listLen is greater than maxPlays, it decrements the old play count");
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, 2, "when listLen is greater than maxPlays, it decrements the old play count");
 
-			dummyData.list = [1,2];
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, 2, "when listLen is less than maxPlays, playCount is listLen");
-			playAll.checked = true;
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, dummyData.list.length, "unless playAll is checked");
+		// 	dummyData.list = [1,2];
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, 2, "when listLen is less than maxPlays, playCount is listLen");
+		// 	playAll.checked = true;
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, dummyData.list.length, "unless playAll is checked");
 
-			dummyData.list = [1,2,3,4,5,6];
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, dummyData.list.length, "when playAll is checked, it is equal to the list length");
+		// 	dummyData.list = [1,2,3,4,5,6];
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, dummyData.list.length, "when playAll is checked, it is equal to the list length");
 
-			playAll.checked = false;
-			oldPlayCount.innerHTML = 0;
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, false, "when oldPlayCount is 0, it returns false");
+		// 	playAll.checked = false;
+		// 	oldPlayCount.innerHTML = 0;
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, false, "when oldPlayCount is 0, it returns false");
 
-			oldPlayCount.innerHTML = 7;
-			playCount = getNewPlayCount(dummyData);
-			assert.equal(playCount, 3, "when oldPlayCount is greater than maxPlays, it sets playCount to maxPlays");
+		// 	oldPlayCount.innerHTML = 7;
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.equal(playCount, 3, "when oldPlayCount is greater than maxPlays, it sets playCount to maxPlays");
 
-			maxPlays.value = 'asdf';
-			playCount = getNewPlayCount(dummyData);
-			assert.ok(isNaN(playCount), "when maxPlays is NaN, it returns NaN");
+		// 	maxPlays.value = 'asdf';
+		// 	playCount = getNewPlayCount(dummyData);
+		// 	assert.ok(isNaN(playCount), "when maxPlays is NaN, it returns NaN");
 
-		});
+		// });
+	}).apply(soundCloudApp);
 	</script>
 </body>
 </html>

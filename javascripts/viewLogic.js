@@ -49,7 +49,7 @@
       trackInfo.onclick = eventFunc ||
               makeSCFunc('put', '/me/favorites/' + track.id, data.SCInfo);
       next.onclick = function () { dispatchEvent('control', 'notrack', data); };
-      follow.onclick = makeSCFunc('put', '/me/followings/' + data.track.user.id, data.SCInfo);
+      follow.onclick = eventFunc || makeSCFunc('put', '/me/followings/' + data.track.user.id, data.SCInfo);
     }
 
     ,updatePlayerandPlay: function(data, oauth_token) {
