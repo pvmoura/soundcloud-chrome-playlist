@@ -76,14 +76,13 @@
     }
 
     ,updateAllFollowings: function(data) {
-      var ul = makeHTMLTag('ul'), li, container = getById('followingsContainer'),
+      var ul = makeHTMLTag('ul'), container = getById('followingsContainer'),
       followings = data.list;
 
       if (followings && followings.length > 0) {
 
         followings.reduce(function (prev, curr, i, arr) {
-
-          li = makeHTMLTag('li', {
+          var li = makeHTMLTag('li', {
             'innerHTML': curr.username,
             'className': 'artistName',
           });
@@ -124,7 +123,7 @@
             }, 750);
             window.clearInterval(interval);
           }
-        }, 200); 
+        }, 400); 
       };
 
     }

@@ -1,4 +1,4 @@
-soundCloudApp.loadMain = function() {
+(function () {
   var that = this;
 
   var SC                  = window.SC,
@@ -17,28 +17,9 @@ soundCloudApp.loadMain = function() {
       getNewArtist        = this.controllers.getNewArtist,
       getNewTrack         = this.controllers.getNewTrack,
       getNewFollowing     = this.controllers.getNewFollowing,
-      getMyFollowings     = this.controllers.getMyFollowings;
-
-
-  // if (!window.SC) {
-  //   that.errorLog.unloadedFiles.push("vendors/sdk");
-  // }
-
-  // if (this.errorLog.unloadedFiles.length) {
-  //   console.log(that.errorLog.unloadedFiles);
-  //   that.errorLog.unloadedFiles.reduce(function (prev, curr, i, arr) {
-  //     if (prev.indexOf(curr) === -1)
-  //       that.loadFile("javascripts/" + curr + ".js");
-
-  //     return prev + curr;
-  //   }, "");
-  //   that.errorLog.unloadedFiles = [];
-
-  //   window.onload = function() { 
-  //     that.loadMain.apply(that);
-  //   };
-  //   return;
-  // }
+      getMyFollowings     = this.controllers.getMyFollowings,
+      saveSettings        = this.persistence.saveSettings,
+      loadSettings        = this.persistence.loadSettings;
 
   this.main = {
     runApp: function () {
@@ -48,24 +29,27 @@ soundCloudApp.loadMain = function() {
 
       // UI settings
       maxPlaysElem.onchange = function (evt) {
-        var val = this.value;
-        if (typeof val === 'number' && !isNaN(val))
-          maxPlays = Math.floor(val);
-        else
+        var val = parseInt(this.value, 10);
+        if (typeof val === 'number' && !isNaN(val)) {
+          maxPlays = val;
+          saveSetting(this.id, this.value);
+        } else
           dispatchEvent('control', 'error', { error: "Please enter a number" });
       };
-      playAllElem.onchange = function (evt) { playAll = this.checked; };
+      playAllElem.onchange = function (evt) {
+        playAll = this.checked;
+        saveSetting(this.id, this.checked);
+      };
 
       // UI callback functions, playCount, maxPlays, etc.
       player.onloadstart = function () { tracksLeft--; };
       player.addEventListener("error", function (error) {
-        console.log(error);
         dispatchEvent('control', 'error', { error: "A problem occurred please try again" });
       }, false);
 
       document.addEventListener("nofollowing",
                                 function () { tracksLeft = maxPlays; },
-                                false);
+                                true);
 
       function updateView (data) {
         
@@ -73,7 +57,7 @@ soundCloudApp.loadMain = function() {
           var listLen = list.length;
 
           newPC = playAll || listLen <= maxPlays ? listLen :
-                  oldPC >= 0 ? oldPC : false;
+                  oldPC >= 0 && oldPC <= maxPlays ? oldPC : false;
           return newPC;
         }
 
@@ -113,16 +97,15 @@ soundCloudApp.loadMain = function() {
 
       initializeEvents(eventCallbacks, "control");
       getMyFollowings(playData);
-      runApp();
+      this.main.runApp();
+      this.viewLogic.initializeUIElementEvents();
+      this.persistence.loadAllSettings();
     }
   };
   (function() {
     console.log("HELLO");
     window.onload = function () {
-      var main = soundCloudApp.main;
-      main.initialize.apply(main);
+      soundCloudApp.main.initialize.apply(soundCloudApp);
     };
   })();
-};
-
-soundCloudApp.loadMain.apply(soundCloudApp);
+}).apply(soundCloudApp);

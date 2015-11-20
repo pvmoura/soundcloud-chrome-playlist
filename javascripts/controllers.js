@@ -53,7 +53,6 @@
       if (artist) {
         event = 'yesfollowing';
         data['artistObj'] = artist;
-        data['playCount'] = 0;
       }
 
       dispatchEvent('control', event, data);
